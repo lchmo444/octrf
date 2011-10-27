@@ -22,26 +22,30 @@ namespace octrf {
     //typedef std::vector<valtype> dv; // dense vector
 
     namespace io {
-        void read_libsvmformat(const std::string& filename, SExampleSet& data);
+        int read_libsvmformat(const std::string& filename, SExampleSet& data);
         void save_libsvmformat(const std::string& filename, const SExampleSet& data);
     };
 
     double entropy(const SExampleSet& data);
 
     class Tree {
+        int dim_;
         bool is_leaf_;
         valtype leaf_value_;
         std::pair<int, valtype> branchfunc_;
-        pficommon::lang::shared_ptr<Tree> tr;
-        pficommon::lang::shared_ptr<Tree> tl;
+        pfi::lang::shared_ptr<Tree> tr_;
+        pfi::lang::shared_ptr<Tree> tl_;
     public:
-        Tree() : is_leaf_(false), leaf_value_(0){};
+        Tree(const int dim, const bool is_leaf = false, const valtype leaf_value = 0)
+            : dim_(dim), is_leaf_(is_leaf), leaf_value_(leaf_value){};
+
         valtype predict(const SV& x) const {
             if(is_leaf_) return leaf_value_;
-            return branch(x) ? tr->predict(x) : tr->predict(x);
+            return branch(x) ? tr_->predict(x) : tl_->predict(x);
         }
         bool branch(const SV& x) const;
-        void train(const SExampleSet& data);
+        static bool branch(const SV& x, const std::pair<int, valtype>& bf);
+        void train(const SExampleSet& data, std::vector<std::pair<int, valtype> >& branchfuncs);
     };
 
     /*

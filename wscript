@@ -16,6 +16,6 @@ def build(bld):
     bld(features = 'cxx cprogram',
         source = 'sandbox.cpp',
         target = 'sandbox',
-        uselib_local = 'octrf',
+        use = 'octrf',
         includes = 'src')
 
