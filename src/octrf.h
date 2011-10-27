@@ -48,8 +48,24 @@ namespace octrf {
         void train(const SExampleSet& data, std::vector<std::pair<int, valtype> >& branchfuncs);
     };
 
-    /*
     class Forest {
+        int dim_;
+        std::vector<Tree> trees;
+    public:
+        Forest(const int dim) : dim_(dim){};
+        valtype predict(const SV& x) const {
+            valtype avg = 0;
+            for(int i=0; i < trees.size(); i++) avg += trees[i].predict(x);
+            avg /= (valtype)trees.size();
+            return avg;
+        }
+        void train(const SExampleSet& data, int f = 3){
+            trees.clear();
+            for(int i=0; i < f; i++){
+                std::vector<std::pair<int, valtype> > branchfuncs;
+                trees.push_back(Tree(dim_));
+                trees[i].train(data, branchfuncs);
+            }
+        }
     };
-    */
 };
