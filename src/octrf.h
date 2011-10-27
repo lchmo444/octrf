@@ -1,7 +1,9 @@
 #pragma once
 
+#include <pficommon/lang/shared_ptr.h>
 #include <vector>
 #include <string>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -10,6 +12,7 @@
 #include <stdexcept>
 #include <map>
 #include <cmath>
+#include <cstdlib>
 
 namespace octrf {
     typedef double valtype; // type of feature values
@@ -25,17 +28,23 @@ namespace octrf {
 
     double entropy(const SExampleSet& data);
 
-    class Leaf {
-        
+    class Tree {
+        bool is_leaf_;
+        valtype leaf_value_;
+        std::pair<int, valtype> branchfunc_;
+        pficommon::lang::shared_ptr<Tree> tr;
+        pficommon::lang::shared_ptr<Tree> tl;
+    public:
+        Tree() : is_leaf_(false), leaf_value_(0){};
+        valtype predict(const SV& x) const {
+            if(is_leaf_) return leaf_value_;
+            return branch(x) ? tr->predict(x) : tr->predict(x);
+        }
+        bool branch(const SV& x) const;
+        void train(const SExampleSet& data);
     };
 
     /*
-    class Node {
-    };
-    
-    class Tree {
-    };
-
     class Forest {
     };
     */

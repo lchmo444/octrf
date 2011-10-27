@@ -3,6 +3,19 @@
 using namespace std;
 
 namespace octrf {
+    /* Tree */
+    bool Tree::branch(const SV& x) const {
+        valtype v = 0;
+        for(int i=0; i < x.size(); i++){
+            if(x[i].first == branchfunc_.first){
+                valtype = x[i].second;
+                break;
+            }
+        }
+        return v < branchfunc_.second;
+    }
+    
+    
     double entropy(const SExampleSet& data){
         double e = 0;
         map<double, int> nums;
