@@ -1,0 +1,10 @@
+subdirs = ''
+
+def configure(conf):
+    conf.recurse(subdirs)
+
+def build(bld):
+    bld(features = 'cxx cxxstlib',
+        source = 'octrf.cpp',
+        target = 'octrf',
+        includes = '.')
