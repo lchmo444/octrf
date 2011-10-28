@@ -38,7 +38,9 @@ int main(int argc, char** argv){
     // train & predict tree
     {
         Tree rt(dim, new bfs::BinaryStamp(dim));
-        rt.train(data);
+        //rt.train(data);
+        //rt.save("data/model.txt");
+        rt.load("data/model.txt");
         
         data.clear();
         io::read_libsvmformat("data/a1a.t", data);
@@ -60,7 +62,7 @@ int main(int argc, char** argv){
     }
 
     // train & predict forest
-    {
+    if(0){
         Forest rf(dim, new bfs::BinaryStamp(dim));
         data.clear();
         io::read_libsvmformat("data/a1a", data);

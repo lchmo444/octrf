@@ -52,8 +52,77 @@ namespace octrf {
         tr_->train(rdata);
         tl_->train(ldata);
     }
+
+    string Tree::serialize() const {
+        stringstream ss;
+        if(is_leaf_){
+            ss << "1\t" << leaf_value_ << endl;
+        } else {
+            ss << "0\t" << bf_->serialize() << endl;
+        }
+        return ss.str();
+    }
+
+    void Tree::deserialize(const string& s){
+        stringstream ss(s);
+        int is_leaf = 0;
+        ss >> is_leaf;
+        is_leaf_ = is_leaf == 1;
+        if(is_leaf){
+            ss >> leaf_value_;
+        } else {
+            string str;
+            ss >> str;
+            bf_->deserialize(str);
+        }
+    }
+
+    void Tree::recursive_serialize(std::deque<string>& dq) const {
+        dq.push_back(serialize());
+        if(!is_leaf_){
+            tr_->recursive_serialize(dq);
+            tl_->recursive_serialize(dq);
+        }
+    }
+
+    void Tree::recursive_deserialize(std::deque<string>& dq){
+        string s = dq[0];
+        dq.pop_front();
+        deserialize(s);
+        if(!is_leaf_){
+            tr_ = shared_ptr<Tree>(new Tree(dim_, bf_->clone()));
+            tr_->recursive_deserialize(dq);
+            tl_ = shared_ptr<Tree>(new Tree(dim_, bf_->clone()));
+            tl_->recursive_deserialize(dq);
+        }
+    }
+
+    void Tree::save(const std::string& filename) const {
+        std::ofstream ofs(filename.c_str());
+        if(ofs.fail()) throw std::runtime_error("Cannot open file : " + filename);
+        deque<string> dq;
+        recursive_serialize(dq);
+        for(deque<string>::iterator it = dq.begin();
+            it != dq.end(); ++it)
+        {
+            ofs << *it;
+        }
+        ofs.close();
+    }
+
+    void Tree::load(const std::string& filename){
+        std::ifstream ifs(filename.c_str());
+        if(ifs.fail()) throw std::runtime_error("Cannot open file : " + filename);
+        deque<string> dq;
+        string buf;
+        while(getline(ifs, buf)){
+            dq.push_back(buf);
+        }
+        recursive_deserialize(dq);
+        ifs.close();
+    }
     
-    
+
     double entropy(const SExampleSet& data){
         double e = 0;
         map<double, int> nums;

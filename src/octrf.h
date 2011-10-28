@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cfloat>
+#include <deque>
 
 namespace octrf {
     typedef double valtype; // type of feature values
@@ -94,13 +95,19 @@ namespace octrf {
             return bf_->branch(x) ? tr_->predict(x) : tl_->predict(x);
         }
         void train(const SExampleSet& data);
+        std::string serialize() const;
+        void deserialize(const std::string& s);
+        void recursive_serialize(std::deque<std::string>& dq) const;
+        void recursive_deserialize(std::deque<std::string>& dq);
+        void save(const std::string& filename) const;
+        void load(const std::string& filename);
     };
 
     class Forest {
         int dim_;
         pfi::lang::shared_ptr<bfs::Base> bf_;
         double entropy_th_; // if the entropy is lesser than this value, growing is stopped
-        int nexamples_th_; // if #data < this value, growing is stopped
+        int nexamples_th_;  // if #data < this value, growing is stopped
         int nsamplings_;    // the number of random samplings
         std::vector<Tree> trees;
     public:
