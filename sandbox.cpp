@@ -37,9 +37,8 @@ int main(int argc, char** argv){
 
     // train & predict tree
     {
-        Tree rt(dim);
-        vector<pair<int, valtype> > tmp;
-        rt.train(data, tmp);
+        Tree rt(dim, new bfs::BinaryStamp(dim));
+        rt.train(data);
         
         data.clear();
         io::read_libsvmformat("data/a1a.t", data);
@@ -61,6 +60,7 @@ int main(int argc, char** argv){
     }
 
     // train & predict forest
+#if 0
     {
         Forest rf(dim);
         data.clear();
@@ -87,6 +87,7 @@ int main(int argc, char** argv){
         printf("Positive: %d/%d\nNegative: %d/%d\nPrecision = %f\nRecall = %f\nF = %f\n",
                tp, fp, tn, fn, pr, rc, f);
     }
+#endif
 
     cout << "All Tests Passed" << endl;
 }

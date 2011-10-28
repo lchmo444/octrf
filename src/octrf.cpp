@@ -5,73 +5,53 @@ using namespace pfi::lang;
 
 namespace octrf {
     /* Tree */
-    bool Tree::branch(const SV& x) const {
-        for(int i=0; i < x.size(); i++){
-            if(x[i].first == branchfunc_.first) return x[i].second < branchfunc_.second;
-        }
-        return 0 < branchfunc_.second;
-    }
-
-    bool Tree::branch(const SV& x, const std::pair<int, valtype>& bf) {
-        for(int i=0; i < x.size(); i++){
-            if(x[i].first == bf.first) return x[i].second < bf.second;
-        }
-        return 0 < bf.second;
-    }
-
-    void Tree::train(const SExampleSet& data, vector<pair<int, valtype> >& branchfuncs){
-        if(branchfuncs.size() == 0){
-            for(int i=0; i < dim_; i++){
-                branchfuncs.push_back(make_pair(i, 0.3));
-            }
-        }
-
+    void Tree::train(const SExampleSet& data){
         cout << "Number of data: " << data.size() << endl;
         cout << "Entropy: " << entropy(data) << endl;
-        if(entropy(data) < 0.1 || data.size() <= 1){
-            is_leaf_ = true;
-            double avg = 0;
+        if(entropy(data) < entropy_th_ || data.size() <= nexamples_th_){
+            valtype avg = 0;
             for(int i=0; i < data.size(); i++) avg += data[i].first;
+            is_leaf_ = true;
             leaf_value_ = (valtype)(avg / (double)data.size());
             cout << "Leaf Value: " << leaf_value_ << endl;
             return;
         }
 
         double mine = 1e+5;
-        int minidx = 0;
-        for(int c=0; c < /*branchfuncs.size()*/min(1000, dim_); c++){
-            int idx = rand() % (branchfuncs.size()-1);
-            const std::pair<int, valtype>& bf = branchfuncs[idx];
+        shared_ptr<bfs::Base> best_bf;
+        for(int c=0; c < nsamplings_; c++){
+            shared_ptr<bfs::Base> bf(bf_->clone());
+            bf->random_sample();
             SExampleSet rdata, ldata;
             for(int i=0; i < data.size(); i++){
-                if(branch(data[i].second, bf)) rdata.push_back(data[i]);
+                if(bf->branch(data[i].second)) rdata.push_back(data[i]);
                 else ldata.push_back(data[i]);
             }
             double e = (double)rdata.size() * entropy(rdata) + (double)ldata.size() * entropy(ldata);
             if(e < mine){
                 mine = e;
-                minidx = idx;
+                best_bf = bf;
             }
         }
 
-        branchfunc_ = branchfuncs[minidx];
         SExampleSet rdata, ldata;
         for(int i=0; i < data.size(); i++){
-            if(branch(data[i].second, branchfunc_)) rdata.push_back(data[i]);
+            if(best_bf->branch(data[i].second)) rdata.push_back(data[i]);
             else ldata.push_back(data[i]);
         }
         if(rdata.size() == 0 || ldata.size() == 0){
-            is_leaf_ = true;
             double avg = 0;
             for(int i=0; i < data.size(); i++) avg += data[i].first;
+            is_leaf_ = true;
             leaf_value_ = (valtype)(avg / (double)data.size());
             cout << "Leaf Value: " << leaf_value_ << endl;
             return;
         }
-        tr_ = shared_ptr<Tree>(new Tree(dim_));
-        tl_ = shared_ptr<Tree>(new Tree(dim_));
-        tr_->train(rdata, branchfuncs);
-        tl_->train(ldata, branchfuncs);
+        bf_ = best_bf;
+        tr_ = shared_ptr<Tree>(new Tree(dim_, bf_));
+        tl_ = shared_ptr<Tree>(new Tree(dim_, bf_));
+        tr_->train(rdata);
+        tl_->train(ldata);
     }
     
     
