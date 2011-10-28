@@ -13,6 +13,7 @@
 #include <map>
 #include <cmath>
 #include <cstdlib>
+#include <cfloat>
 
 namespace octrf {
     typedef double valtype; // type of feature values

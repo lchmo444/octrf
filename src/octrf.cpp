@@ -6,8 +6,7 @@ using namespace pfi::lang;
 namespace octrf {
     /* Tree */
     void Tree::train(const SExampleSet& data){
-        cout << "Number of data: " << data.size() << endl;
-        cout << "Entropy: " << entropy(data) << endl;
+        cout << "Number of data: " << data.size() << ", Entropy: " << entropy(data) << endl;
         if(entropy(data) < entropy_th_ || data.size() <= nexamples_th_){
             valtype avg = 0;
             for(int i=0; i < data.size(); i++) avg += data[i].first;
@@ -17,7 +16,7 @@ namespace octrf {
             return;
         }
 
-        double mine = 1e+5;
+        double mine = DBL_MAX;
         shared_ptr<bfs::Base> best_bf;
         for(int c=0; c < nsamplings_; c++){
             shared_ptr<bfs::Base> bf(bf_->clone());
