@@ -60,12 +60,11 @@ int main(int argc, char** argv){
     }
 
     // train & predict forest
-#if 0
     {
-        Forest rf(dim);
+        Forest rf(dim, new bfs::BinaryStamp(dim));
         data.clear();
         io::read_libsvmformat("data/a1a", data);
-        rf.train(data, 100);
+        rf.train(data, 9);
 
         data.clear();
         io::read_libsvmformat("data/a1a.t", data);
@@ -87,7 +86,6 @@ int main(int argc, char** argv){
         printf("Positive: %d/%d\nNegative: %d/%d\nPrecision = %f\nRecall = %f\nF = %f\n",
                tp, fp, tn, fn, pr, rc, f);
     }
-#endif
 
     cout << "All Tests Passed" << endl;
 }

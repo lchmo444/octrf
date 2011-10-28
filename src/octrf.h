@@ -95,12 +95,17 @@ namespace octrf {
         void train(const SExampleSet& data);
     };
 
-#if 0
     class Forest {
         int dim_;
+        pfi::lang::shared_ptr<bfs::Base> bf_;
+        double entropy_th_; // if the entropy is lesser than this value, growing is stopped
+        int nexamples_th_; // if #data < this value, growing is stopped
+        int nsamplings_;    // the number of random samplings
         std::vector<Tree> trees;
     public:
-        Forest(const int dim) : dim_(dim){};
+        Forest(const int dim, bfs::Base* bf, const double entropy_th = 0.1, int nexamples_th = 1, int nsamplings = 300)
+            : dim_(dim), bf_(bf), entropy_th_(entropy_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings)
+        {};
         valtype predict(const SV& x) const {
             valtype avg = 0;
             for(int i=0; i < trees.size(); i++) avg += trees[i].predict(x);
@@ -110,10 +115,9 @@ namespace octrf {
         void train(const SExampleSet& data, int f = 3){
             trees.clear();
             for(int i=0; i < f; i++){
-                trees.push_back(Tree(dim_));
+                trees.push_back(Tree(dim_, bf_, entropy_th_, nexamples_th_, nsamplings_));
                 trees[i].train(data);
             }
         }
     };
-#endif
 }
