@@ -73,14 +73,15 @@ namespace octrf {
     class Tree {
         int dim_;           // the number of features' dimension
         pfi::lang::shared_ptr<bfs::Base> bf_;
-        double entropy_th_; // if the entropy is lesser than this value, growing is stopped
-        int nexamples_th_; // if #data < this value, growing is stopped
-        int nsamplings_;    // the number of random samplings
         bool is_leaf_;
         valtype leaf_value_;
         pfi::lang::shared_ptr<Tree> tr_;
         pfi::lang::shared_ptr<Tree> tl_;
     public:
+        double entropy_th_; // if the entropy is lesser than this value, growing is stopped
+        int nexamples_th_; // if #data < this value, growing is stopped
+        int nsamplings_;    // the number of random samplings
+
         Tree(const int dim, bfs::Base* bf, const double entropy_th = 0.1, int nexamples_th = 1, int nsamplings = 300)
             : dim_(dim), bf_(bf), entropy_th_(entropy_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings),
               is_leaf_(false), leaf_value_(0)
@@ -104,28 +105,34 @@ namespace octrf {
     };
 
     class Forest {
+        int ntrees_;
         int dim_;
         pfi::lang::shared_ptr<bfs::Base> bf_;
+        std::vector<Tree> trees_;
+    public:
         double entropy_th_; // if the entropy is lesser than this value, growing is stopped
         int nexamples_th_;  // if #data < this value, growing is stopped
         int nsamplings_;    // the number of random samplings
-        std::vector<Tree> trees;
-    public:
-        Forest(const int dim, bfs::Base* bf, const double entropy_th = 0.1, int nexamples_th = 1, int nsamplings = 300)
-            : dim_(dim), bf_(bf), entropy_th_(entropy_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings)
+
+        Forest(const int ntrees, const int dim, bfs::Base* bf, const double entropy_th = 0.1, int nexamples_th = 1, int nsamplings = 300)
+            : ntrees_(ntrees), dim_(dim), bf_(bf),
+              entropy_th_(entropy_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings)
         {};
         valtype predict(const SV& x) const {
+            assert(trees_.size() == ntrees_);
             valtype avg = 0;
-            for(int i=0; i < trees.size(); i++) avg += trees[i].predict(x);
-            avg /= (valtype)trees.size();
+            for(int i=0; i < trees_.size(); i++) avg += trees_[i].predict(x);
+            avg /= (valtype)trees_.size();
             return avg;
         }
-        void train(const SExampleSet& data, int f = 3){
-            trees.clear();
-            for(int i=0; i < f; i++){
-                trees.push_back(Tree(dim_, bf_, entropy_th_, nexamples_th_, nsamplings_));
-                trees[i].train(data);
+        void train(const SExampleSet& data){
+            trees_.clear();
+            for(int i=0; i < ntrees_; i++){
+                trees_.push_back(Tree(dim_, bf_, entropy_th_, nexamples_th_, nsamplings_));
+                trees_[i].train(data);
             }
         }
+        void save(const std::string& filename) const;
+        void load(const std::string& filename);
     };
 }

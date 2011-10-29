@@ -6,13 +6,13 @@ using namespace pfi::lang;
 namespace octrf {
     /* Tree */
     void Tree::train(const SExampleSet& data){
-        cout << "Number of data: " << data.size() << ", Entropy: " << entropy(data) << endl;
+        // cout << "Number of data: " << data.size() << ", Entropy: " << entropy(data) << endl;
         if(entropy(data) < entropy_th_ || data.size() <= nexamples_th_){
             valtype avg = 0;
             for(int i=0; i < data.size(); i++) avg += data[i].first;
             is_leaf_ = true;
             leaf_value_ = (valtype)(avg / (double)data.size());
-            cout << "Leaf Value: " << leaf_value_ << endl;
+            // cout << "Leaf Value: " << leaf_value_ << endl;
             return;
         }
 
@@ -43,7 +43,7 @@ namespace octrf {
             for(int i=0; i < data.size(); i++) avg += data[i].first;
             is_leaf_ = true;
             leaf_value_ = (valtype)(avg / (double)data.size());
-            cout << "Leaf Value: " << leaf_value_ << endl;
+            // cout << "Leaf Value: " << leaf_value_ << endl;
             return;
         }
         bf_ = best_bf;
@@ -121,8 +121,41 @@ namespace octrf {
         recursive_deserialize(dq);
         ifs.close();
     }
+
+    /* Forest */
+    void Forest::save(const std::string& filename) const {
+        std::ofstream ofs(filename.c_str());
+        if(ofs.fail()) throw std::runtime_error("Cannot open file : " + filename);
+        deque<string> dq;
+        for(int i = 0; i < trees_.size(); ++i){
+            trees_[i].recursive_serialize(dq);
+        }
+        for(deque<string>::iterator it = dq.begin();
+            it != dq.end(); ++it)
+        {
+            ofs << *it;
+        }
+        ofs.close();
+    }
+
+    void Forest::load(const std::string& filename){
+        std::ifstream ifs(filename.c_str());
+        if(ifs.fail()) throw std::runtime_error("Cannot open file : " + filename);
+        deque<string> dq;
+        string buf;
+        while(getline(ifs, buf)){
+            dq.push_back(buf);
+        }
+        trees_.clear();
+        for(int i = 0; i < ntrees_; ++i){
+            trees_.push_back(Tree(dim_, bf_, entropy_th_, nexamples_th_, nsamplings_));
+            trees_[i].recursive_deserialize(dq);
+        }
+        ifs.close();
+    }
     
 
+    /* etc */
     double entropy(const SExampleSet& data){
         double e = 0;
         map<double, int> nums;

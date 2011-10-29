@@ -9,11 +9,12 @@
 #include <octrf.h>
 #include <cassert>
 #include <cstdio>
+#include <benchmark.hpp>
 
 using namespace std;
 using namespace octrf;
 
-int main(int argc, char** argv){
+int main(){
     // io
     SExampleSet data;
     int dim = io::read_libsvmformat("data/a1a", data);
@@ -38,14 +39,22 @@ int main(int argc, char** argv){
     // train & predict tree
     {
         Tree rt(dim, new bfs::BinaryStamp(dim));
-        //rt.train(data);
-        //rt.save("data/model.txt");
-        rt.load("data/model.txt");
+        benchmark("train"){
+            rt.train(data);
+        }
+        benchmark("save"){
+            rt.save("tmp/tree.txt");
+        }
+        Tree rt_l(dim, new bfs::BinaryStamp(dim));
+        benchmark("load"){
+            rt_l.load("tmp/tree.txt");
+        }
         
         data.clear();
         io::read_libsvmformat("data/a1a.t", data);
         int tp=0, tn=0, fp=0, fn=0;
         for(int i=0; i < data.size(); i++){
+            assert(abs(rt.predict(data[i].second) - rt_l.predict(data[i].second)) < 0.01);
             bool p = rt.predict(data[i].second) > 0;
             if(p)
                 if(data[i].first > 0) tp++;
@@ -62,17 +71,26 @@ int main(int argc, char** argv){
     }
 
     // train & predict forest
-    if(0){
-        Forest rf(dim, new bfs::BinaryStamp(dim));
+    if(1){
+        const int ntrees = 3;
+        Forest rf(ntrees, dim, new bfs::BinaryStamp(dim));
+        rf.nsamplings_ = 100;
         data.clear();
         io::read_libsvmformat("data/a1a", data);
-        rf.train(data, 9);
+        benchmark("train forest"){
+            rf.train(data);
+        }
+        rf.save("tmp/forest.txt");
+        Forest rf_l(ntrees, dim, new bfs::BinaryStamp(dim));
+        rf_l.load("tmp/forest.txt");
 
         data.clear();
         io::read_libsvmformat("data/a1a.t", data);
         int tp=0, tn=0, fp=0, fn=0;
         for(int i=0; i < data.size(); i++){
             bool p = rf.predict(data[i].second) > 0;
+            bool p_l = rf_l.predict(data[i].second) > 0;
+            assert(p == p_l);
             if(p) {
                 if(data[i].first > 0) tp++;
                 else fp++;

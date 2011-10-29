@@ -7,7 +7,7 @@ def options(opt):
 
 def configure(conf):
     conf.check_tool('compiler_cxx')
-    conf.env.CXXFLAGS += ['-W', '-Wall', '-Wextra', '-O2', '-g', '-Wno-sign-compare']
+    conf.env.CXXFLAGS += ['-W', '-Wall', '-Wextra', '-O2', '-g', '-Wno-sign-compare', '-Wno-reorder']
     conf.recurse(subdirs)
     #conf.check_cfg(package = 'opencv', args='--cflags --libs', atleast_version='2.2.0', uselib_store='opencv')
 
