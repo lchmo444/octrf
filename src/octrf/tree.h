@@ -6,14 +6,16 @@ namespace octrf {
     template <typename YType, typename XType,
               typename TestFunc>
     class Tree {
+        typedef Tree<YType, XType, TestFunc> mytree;
+        typedef ExampleSet<YType, XType> ES;
+
         int dim_;           // the number of features' dimension
         TestFunc tf_;
         bool is_leaf_;
         YType leaf_value_;
-        std::shared_ptr<Tree<YType, XType, TestFunc> > tr_;
-        std::shared_ptr<Tree<YType, XType, TestFunc> > tl_;
+        std::shared_ptr<mytree> tr_;
+        std::shared_ptr<mytree> tl_;
     public:
-        typedef ExampleSet<YType, XType> ES;
         double objfunc_th_; // if the entropy is lesser than this value, growing is stopped
         int nexamples_th_; // if #data < this value, growing is stopped
         int nsamplings_;    // the number of random samplings
@@ -69,11 +71,79 @@ namespace octrf {
                 return;
             }
             tf_ = best_tf;
-            tr_ = std::shared_ptr<Tree>(new Tree<YType, XType, TestFunc>(dim_, tf_));
-            tl_ = std::shared_ptr<Tree>(new Tree<YType, XType, TestFunc>(dim_, tf_));
+            tr_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
+            tl_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
             tr_->train(rdata, objfunc);
             tl_->train(ldata, objfunc);
         }
 
+        std::string serialize() const {
+            std::stringstream ss;
+            if(is_leaf_){
+                ss << "1\t" << leaf_value_ << std::endl;
+            } else {
+                ss << "0\t" << tf_.serialize() << std::endl;
+            }
+            return ss.str();
+        }
+
+        void deserialize(const std::string& s){
+            std::stringstream ss(s);
+            int is_leaf = 0;
+            ss >> is_leaf;
+            is_leaf_ = is_leaf == 1;
+            if(is_leaf){
+                ss >> leaf_value_;
+            } else {
+                std::string str;
+                ss >> str;
+                tf_.deserialize(str);
+            }
+        }
+
+        void recursive_serialize(std::deque<std::string>& dq) const {
+            dq.push_back(serialize());
+            if(!is_leaf_){
+                tr_->recursive_serialize(dq);
+                tl_->recursive_serialize(dq);
+            }
+        }
+
+        void recursive_deserialize(std::deque<std::string>& dq){
+            std::string s = dq[0];
+            dq.pop_front();
+            deserialize(s);
+            if(!is_leaf_){
+                tr_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
+                tr_->recursive_deserialize(dq);
+                tl_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
+                tl_->recursive_deserialize(dq);
+            }
+        }
+
+        void save(const std::string& filename) const {
+            std::ofstream ofs(filename.c_str());
+            if(ofs.fail()) throw std::runtime_error("Cannot open file : " + filename);
+            std::deque<std::string> dq;
+            recursive_serialize(dq);
+            for(std::deque<std::string>::iterator it = dq.begin();
+                it != dq.end(); ++it)
+            {
+                ofs << *it;
+            }
+            ofs.close();
+        }
+
+        void load(const std::string& filename){
+            std::ifstream ifs(filename.c_str());
+            if(ifs.fail()) throw std::runtime_error("Cannot open file : " + filename);
+            std::deque<std::string> dq;
+            std::string buf;
+            while(getline(ifs, buf)){
+                dq.push_back(buf);
+            }
+            recursive_deserialize(dq);
+            ifs.close();
+        }
     };
 } // octrf
