@@ -26,11 +26,6 @@ int main(){
     assert(data.X_[0][1].first == 10);
     assert(data.X_[0][1].second == +1);
 
-    SExampleSet small_data(10);
-    copy(data.Y_.begin(), data.Y_.begin() + 10, small_data.Y_.begin());
-    copy(data.X_.begin(), data.X_.begin() + 10, small_data.X_.begin());
-    io::save_libsvmformat("tmp/a1a.small", small_data);
-
     // train & predict tree
     {
         Tree<int, dSV, testfuncs::BinaryStamp<double> > rt(dim, testfuncs::BinaryStamp<double>(dim));
