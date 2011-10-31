@@ -33,7 +33,7 @@ int main(){
 
     // train & predict tree
     {
-        Tree<int, dSV, testfuncs::BinaryStamp> rt(dim, testfuncs::BinaryStamp(dim));
+        Tree<int, dSV, testfuncs::BinaryStamp<double> > rt(dim, testfuncs::BinaryStamp<double>(dim));
         benchmark("train"){
             rt.train(data, objfuncs::entropy);
         }

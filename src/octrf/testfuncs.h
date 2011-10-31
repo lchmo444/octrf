@@ -14,25 +14,20 @@ namespace octrf {
             virtual Base* clone() const {return new Base;}
         };
 
+        template <typename T>
         class BinaryStamp : public Base { // decision stamp for binary features
             int dim_;
-            int true_value_;
+            T th_;
             int d_;
         public:
-            BinaryStamp() : dim_(1), true_value_(0), d_(0){}
-            BinaryStamp(const int dim, const int true_value = 1)
-                :  dim_(dim), true_value_(true_value), d_(0){};
-            bool branch(const SV& x) const {
+            BinaryStamp() : dim_(1), th_(0), d_(0){}
+            BinaryStamp(const int dim, const int th = 0)
+                :  dim_(dim), th_(th), d_(0){};
+            bool branch(const std::vector< std::pair<int, T> >& x) const {
                 for(int i=0; i < x.size(); i++){
-                    if(x[i].first == d_) return x[i].second == true_value_;
+                    if(x[i].first == d_) return x[i].second > th_;
                 }
-                return  0 == true_value_;
-            }
-            bool branch(const dSV& x) const {
-                for(int i=0; i < x.size(); i++){
-                    if(x[i].first == d_) return x[i].second == true_value_;
-                }
-                return  0 == true_value_;
+                return  0 > th_;
             }
             void random_sample() { d_ = rand() % dim_; }
             std::string serialize() const {
@@ -44,7 +39,7 @@ namespace octrf {
                 std::stringstream ss(s);
                 ss >> d_;
             }
-            Base* clone() const { return new BinaryStamp(dim_, true_value_); }
+            Base* clone() const { return new BinaryStamp(dim_, th_); }
         };
         
     } // testfuncs
