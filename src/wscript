@@ -5,6 +5,6 @@ def configure(conf):
 
 def build(bld):
     bld(features = 'cxx cxxstlib',
-        source = 'octrf.cpp',
+        source = 'octrf/io.cpp octrf/objfuncs.cpp',
         target = 'octrf',
         includes = '.')

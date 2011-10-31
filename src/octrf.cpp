@@ -1,7 +1,6 @@
 #include "octrf.h"
 
 using namespace std;
-using namespace pfi::lang;
 
 namespace octrf {
     /* Tree */
@@ -172,49 +171,4 @@ namespace octrf {
         }
         return e;
     }
-    
-    namespace io {
-        // retval means the number of dimensions of data
-        int read_libsvmformat(const std::string& filename, SExampleSet& data){
-            int dim = 0;
-            std::ifstream ifs(filename.c_str());
-            if(ifs.fail()) throw std::runtime_error("cannot open file: " + filename);
-            string buf;
-            while(getline(ifs, buf)){
-                std::stringstream ss(buf);
-                valtype y = 0;
-                SV x;
-                ss >> y;
-                int i = 0;
-                valtype v = 0;
-                while(ss >> i){
-                    char h;
-                    ss >> h;
-                    ss >> v;
-                    x.push_back(std::make_pair(i-1, v));
-                    dim = max(dim, i);
-                }
-                data.push_back(std::make_pair(y, x));
-            }
-            ifs.close();
-
-            return dim;
-        }
-
-        void save_libsvmformat(const std::string& filename, const SExampleSet& data){
-            std::ofstream ofs(filename.c_str());
-            if(ofs.fail()) throw std::runtime_error("cannot open file: " + filename);
-            for(int i=0; i < data.size(); i++){
-                const valtype& y = data[i].first;
-                const SV& x = data[i].second;
-                ofs << y << " ";
-                for(int j=0; j < x.size(); j++){
-                    ofs << x[j].first+1 << ":" << x[j].second << " ";
-                }
-                ofs << endl;
-            }
-            ofs.close();
-        }
-    };
-    
 };

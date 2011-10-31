@@ -1,33 +1,15 @@
 #pragma once
 
-#include <pficommon/lang/shared_ptr.h>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <utility>
-#include <cassert>
-#include <stdexcept>
-#include <map>
-#include <cmath>
-#include <cstdlib>
-#include <cfloat>
-#include <deque>
+#include "octrf/common.h"
+#include "octrf/io.h"
+#include "octrf/objfuncs.h"
+#include "octrf/testfuncs.h"
+#include "octrf/tree.h"
+
+#if 0
+#include "octrf/common.h"
 
 namespace octrf {
-    typedef double valtype; // type of feature values
-    typedef std::vector< std::pair<int, valtype> > SV; // sparse vector
-    typedef std::pair<valtype, SV> SExample;
-    typedef std::vector<SExample> SExampleSet;
-    //typedef std::vector<valtype> dv; // dense vector
-
-    namespace io {
-        int read_libsvmformat(const std::string& filename, SExampleSet& data);
-        void save_libsvmformat(const std::string& filename, const SExampleSet& data);
-    }
-
     double entropy(const SExampleSet& data);
 
     namespace bfs { // branching functions
@@ -72,11 +54,11 @@ namespace octrf {
 
     class Tree {
         int dim_;           // the number of features' dimension
-        pfi::lang::shared_ptr<bfs::Base> bf_;
+        std::shared_ptr<bfs::Base> bf_;
         bool is_leaf_;
         valtype leaf_value_;
-        pfi::lang::shared_ptr<Tree> tr_;
-        pfi::lang::shared_ptr<Tree> tl_;
+        std::shared_ptr<Tree> tr_;
+        std::shared_ptr<Tree> tl_;
     public:
         double entropy_th_; // if the entropy is lesser than this value, growing is stopped
         int nexamples_th_; // if #data < this value, growing is stopped
@@ -86,7 +68,7 @@ namespace octrf {
             : dim_(dim), bf_(bf), entropy_th_(entropy_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings),
               is_leaf_(false), leaf_value_(0)
         {};
-        Tree(const int dim, pfi::lang::shared_ptr<bfs::Base> bf, const double entropy_th = 0.1, int nexamples_th = 1, int nsamplings = 300)
+        Tree(const int dim, std::shared_ptr<bfs::Base> bf, const double entropy_th = 0.1, int nexamples_th = 1, int nsamplings = 300)
             : dim_(dim), bf_(bf), entropy_th_(entropy_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings),
               is_leaf_(false), leaf_value_(0)
         {};
@@ -107,7 +89,7 @@ namespace octrf {
     class Forest {
         int ntrees_;
         int dim_;
-        pfi::lang::shared_ptr<bfs::Base> bf_;
+        std::shared_ptr<bfs::Base> bf_;
         std::vector<Tree> trees_;
     public:
         double entropy_th_; // if the entropy is lesser than this value, growing is stopped
@@ -136,3 +118,4 @@ namespace octrf {
         void load(const std::string& filename);
     };
 }
+#endif
