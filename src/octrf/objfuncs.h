@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include <unordered_map>
 
 namespace octrf {
     namespace objfuncs {

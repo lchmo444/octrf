@@ -43,6 +43,11 @@ namespace octrf {
             es.push_back(Y_[i], X_[i]);
         }
 
+        void subset(const std::vector<int>& idxs, ExampleSet<YType, XType>& ss) const
+        {
+            for(int i = 0; i < idxs.size(); ++i) push_to(ss, idxs[i]);
+        }
+
         size_t size() const { return Y_.size(); }
     };
 }
