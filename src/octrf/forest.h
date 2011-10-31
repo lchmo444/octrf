@@ -22,7 +22,7 @@ namespace octrf {
         int nexamples_th_;  // if #data < this value, growing is stopped
         int nsamplings_;    // the number of random samplings
 
-        Forest(const int ntrees, const int dim, TestFunc tf, const double objfunc_th = 0.1, int nexamples_th = 1, int nsamplings = 300)
+        Forest(const int ntrees, const int dim, TestFunc tf, const double objfunc_th = 0.1, int nexamples_th = 0, int nsamplings = 300)
             : ntrees_(ntrees), dim_(dim), tf_(tf),
               objfunc_th_(objfunc_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings)
         {};
