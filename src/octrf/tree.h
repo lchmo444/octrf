@@ -23,7 +23,7 @@ namespace octrf {
         {};
         YType predict(const XType& x) const {
             if(is_leaf_) return leaf_value_;
-            return tf_.branch(x) ? tr_->predict(x) : tl_->predict(x);
+            return tf_(x) ? tr_->predict(x) : tl_->predict(x);
         }
 
         template <typename ObjFunc>
@@ -45,7 +45,7 @@ namespace octrf {
                 tf.random_sample();
                 ES rdata, ldata;
                 for(int i=0; i < data.size(); i++){
-                    if(tf.branch(data.X_[i])) data.push_to(rdata, i);
+                    if(tf(data.X_[i])) data.push_to(rdata, i);
                     else data.push_to(ldata, i);
                 }
                 double e = (double)rdata.size() * objfunc(rdata.Y_) + (double)ldata.size() * objfunc(ldata.Y_);
@@ -57,7 +57,7 @@ namespace octrf {
 
             ES rdata, ldata;
             for(int i=0; i < data.size(); i++){
-                if(best_tf.branch(data.X_[i])) data.push_to(rdata, i);
+                if(best_tf(data.X_[i])) data.push_to(rdata, i);
                 else data.push_to(ldata, i);
             }
             if(rdata.size() == 0 || ldata.size() == 0){
