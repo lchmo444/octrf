@@ -6,4 +6,4 @@
 #include "octrf/testfuncs.h"
 #include "octrf/tree.h"
 #include "octrf/forest.h"
-
+#include "octrf/leafs.h"

@@ -8,3 +8,13 @@ def build(bld):
         source = 'octrf/io.cpp octrf/objfuncs.cpp',
         target = 'octrf',
         includes = '.')
+    bld(features = 'cxx cprogram',
+        source = 'train.cpp',
+        target = 'train',
+        use = 'octrf',
+        includes = 'src')
+    bld(features = 'cxx cprogram',
+        source = 'predict.cpp',
+        target = 'predict',
+        use = 'octrf',
+        includes = 'src')

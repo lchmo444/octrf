@@ -13,9 +13,9 @@ def configure(conf):
 
 def build(bld):
     bld.recurse(subdirs)
-    bld(features = 'cxx cprogram',
-        source = 'sandbox.cpp',
-        target = 'sandbox',
-        use = 'octrf',
-        includes = 'src')
+#     bld(features = 'cxx cprogram',
+#         source = 'sandbox.cpp',
+#         target = 'sandbox',
+#         use = 'octrf',
+#         includes = 'src')
 

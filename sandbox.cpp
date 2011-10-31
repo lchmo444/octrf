@@ -9,7 +9,7 @@
 #include "src/octrf.h"
 #include <cassert>
 #include <cstdio>
-#include "src/benchmark.hpp"
+#include "src/benchmark.h"
 
 using namespace std;
 using namespace octrf;

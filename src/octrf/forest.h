@@ -6,10 +6,11 @@
 namespace octrf {
     template <typename YType,
               typename XType,
+              typename LeafType,
               typename TestFunc,
-              typename PredictResultType>
+              typename ResultType>
     class Forest {
-        typedef Tree<YType, XType, TestFunc> mytree;
+        typedef Tree<YType, XType, LeafType, TestFunc> mytree;
         typedef ExampleSet<YType, XType> ES;
 
         int ntrees_;
@@ -26,13 +27,12 @@ namespace octrf {
               objfunc_th_(objfunc_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings)
         {};
 
-        template <typename Predictor> // vector<YType> -> PredictResultType
-        PredictResultType predict(const XType& x, Predictor& pr) const {
+        ResultType predict(const XType& x) const {
             assert(trees_.size() == ntrees_);
-            std::vector<YType> results;
+            std::vector<LeafType> results;
             for(int i=0; i < trees_.size(); i++)
                 results.push_back(trees_[i].predict(x));
-            return pr(results);
+            return LeafType::set2result(results);
         }
 
         template <typename ObjFunc>
@@ -57,9 +57,11 @@ namespace octrf {
         void save(const std::string& filename) const {
             std::ofstream ofs(filename.c_str());
             if(ofs.fail()) throw std::runtime_error("Cannot open file : " + filename);
+            ofs << trees_.size() << std::endl;
             std::deque<std::string> dq;
             for(int i = 0; i < trees_.size(); ++i){
                 trees_[i].recursive_serialize(dq);
+                dq.push_back(std::string("\n"));
             }
             for(std::deque<std::string>::iterator it = dq.begin();
                 it != dq.end(); ++it)
@@ -75,7 +77,13 @@ namespace octrf {
             std::deque<std::string> dq;
             std::string buf;
             while(getline(ifs, buf)){
-                dq.push_back(buf);
+                if(buf != "")
+                    dq.push_back(buf);
+            }
+            {
+                std::stringstream ss(dq[0]);
+                ss >> ntrees_;
+                dq.pop_front();
             }
             trees_.clear();
             for(int i = 0; i < ntrees_; ++i){
@@ -85,17 +93,5 @@ namespace octrf {
             ifs.close();
         }
     };
-
-    namespace predictors {
-        template <typename YType, typename PredictResultType>
-        PredictResultType average(const std::vector<YType>& Y){
-            PredictResultType avg = 0;
-            for(int i = 0; i < Y.size(); ++i){
-                avg += Y[i];
-            }
-            avg /= (PredictResultType)Y.size();
-            return avg;
-        }
-    } // predictors
 }
 
