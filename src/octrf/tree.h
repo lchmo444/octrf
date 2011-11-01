@@ -3,6 +3,18 @@
 #include "common.h"
 
 namespace octrf {
+    struct TreeTrainingParameters {
+        double objfunc_th; // if the entropy is lesser than this value, growing is stopped
+        int nexamples_th;  // if #data < this value, growing is stopped
+        int nsamplings;    // the number of random samplings
+        TreeTrainingParameters(const double objfunc_th = 0, int nexamples_th = 1, int nsamplings = 300)
+            : objfunc_th(objfunc_th),
+              nexamples_th(nexamples_th),
+              nsamplings(nsamplings)
+        {};
+    };
+
+
     template <typename YType, typename XType, typename LeafType,
               typename TestFunc>
     class Tree {
@@ -15,11 +27,8 @@ namespace octrf {
         std::shared_ptr<mytree> tr_;
         std::shared_ptr<mytree> tl_;
     public:
-        double objfunc_th_; // if the entropy is lesser than this value, growing is stopped
-        int nexamples_th_; // if #data < this value, growing is stopped
-        int nsamplings_;    // the number of random samplings
-        Tree(const int dim, TestFunc tf, const double objfunc_th = 0.1, int nexamples_th = 0, int nsamplings = 300)
-            : dim_(dim), tf_(tf), objfunc_th_(objfunc_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings),
+        Tree(const int dim, TestFunc tf)
+            : dim_(dim), tf_(tf),
               leaf_(false, std::shared_ptr<LeafType>())
         {};
 
@@ -29,15 +38,15 @@ namespace octrf {
         }
 
         template <typename ObjFunc>
-        void train(const ES& data, ObjFunc& objfunc){
-            if(objfunc(data.Y_) < objfunc_th_ || data.size() <= nexamples_th_){
+        void train(const ES& data, ObjFunc& objfunc, const TreeTrainingParameters& trp){
+            if(objfunc(data.Y_) < trp.objfunc_th || data.size() <= trp.nexamples_th){
                 leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_)));
                 return;
             }
 
             double mine = DBL_MAX;
             TestFunc best_tf;
-            for(int c=0; c < nsamplings_; c++){
+            for(int c=0; c < trp.nsamplings; c++){
                 TestFunc tf(tf_);
                 tf.random_sample();
                 ES rdata, ldata;
@@ -64,8 +73,8 @@ namespace octrf {
             tf_ = best_tf;
             tr_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
             tl_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
-            tr_->train(rdata, objfunc);
-            tl_->train(ldata, objfunc);
+            tr_->train(rdata, objfunc, trp);
+            tl_->train(ldata, objfunc, trp);
         }
 
         std::string serialize() const {

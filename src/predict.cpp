@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 
     cout << "initialize model" << endl;
     typedef Forest<int, dSV, leafs::Avg<int, double>, testfuncs::BinaryStamp<double>, double > myforest;
-    myforest model(0, dim, testfuncs::BinaryStamp<double>(dim));
+    myforest model(dim, testfuncs::BinaryStamp<double>(dim));
     cout << "load model from the file" << endl;
     model.load(a.get<string>("model"));
 

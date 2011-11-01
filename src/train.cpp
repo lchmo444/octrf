@@ -18,9 +18,10 @@ int main(int argc, char *argv[])
     int dim = io::read_libsvmformat(a.get<string>("data"), data);
 
     typedef Forest<int, dSV, leafs::Avg<int, double>, testfuncs::BinaryStamp<double>, double > myforest;
-    myforest model(a.get<int>("ntrees"), dim, testfuncs::BinaryStamp<double>(dim), 0, 1, 500);
+    myforest model(dim, testfuncs::BinaryStamp<double>(dim));
     benchmark("train"){
-        model.train(data, objfuncs::entropy);
+        model.train(data, objfuncs::entropy,
+                    ForestTrainingParameters(a.get<int>("ntrees"), TreeTrainingParameters(0, 1, 500)));
     }
     model.save(a.get<string>("model"));
     

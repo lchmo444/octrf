@@ -4,6 +4,16 @@
 #include "tree.h"
 
 namespace octrf {
+    struct ForestTrainingParameters
+    {
+        int ntrees;
+        TreeTrainingParameters tree_trp;
+        ForestTrainingParameters(const int ntrees = 1,
+                                 const TreeTrainingParameters tree_trp = TreeTrainingParameters())
+            : ntrees(ntrees), tree_trp(tree_trp){};
+    };
+
+
     template <typename YType,
               typename XType,
               typename LeafType,
@@ -13,22 +23,15 @@ namespace octrf {
         typedef Tree<YType, XType, LeafType, TestFunc> mytree;
         typedef ExampleSet<YType, XType> ES;
 
-        int ntrees_;
         int dim_;
         TestFunc tf_;
         std::vector<mytree> trees_;
     public:
-        double objfunc_th_; // if the objfunc is lesser than this value, growing is stopped
-        int nexamples_th_;  // if #data < this value, growing is stopped
-        int nsamplings_;    // the number of random samplings
-
-        Forest(const int ntrees, const int dim, TestFunc tf, const double objfunc_th = 0.1, int nexamples_th = 0, int nsamplings = 300)
-            : ntrees_(ntrees), dim_(dim), tf_(tf),
-              objfunc_th_(objfunc_th), nexamples_th_(nexamples_th), nsamplings_(nsamplings)
+        Forest(const int dim, TestFunc tf)
+            : dim_(dim), tf_(tf)
         {};
 
         ResultType predict(const XType& x) const {
-            assert(trees_.size() == ntrees_);
             std::vector<LeafType> results;
             for(int i=0; i < trees_.size(); i++)
                 results.push_back(trees_[i].predict(x));
@@ -36,21 +39,21 @@ namespace octrf {
         }
 
         template <typename ObjFunc>
-        void train(const ES& data, ObjFunc& objfunc){
+        void train(const ES& data, ObjFunc& objfunc, const ForestTrainingParameters& trp){
             std::vector<int> idxs;
             for(int i = 0; i < data.size(); ++i) idxs.push_back(i);
             std::random_shuffle(idxs.begin(), idxs.end());
             auto it = idxs.begin();
             trees_.clear();
-            for(int i=0; i < ntrees_; i++){
+            for(int i=0; i < trp.ntrees; i++){
                 std::vector<int> subidxs;
-                for(int j=0; j < idxs.size()/ntrees_ && it != idxs.end(); ++j, ++it){
+                for(int j=0; j < idxs.size()/trp.ntrees && it != idxs.end(); ++j, ++it){
                     subidxs.push_back(*it);
                 }
                 ES partofdata;
                 data.subset(subidxs, partofdata);
-                trees_.push_back(mytree(dim_, tf_, objfunc_th_, nexamples_th_, nsamplings_));
-                trees_[i].train(partofdata, objfunc);
+                trees_.push_back(mytree(dim_, tf_));
+                trees_[i].train(partofdata, objfunc, trp.tree_trp);
             }
         }
  
@@ -80,14 +83,15 @@ namespace octrf {
                 if(buf != "")
                     dq.push_back(buf);
             }
+            int ntrees;
             {
                 std::stringstream ss(dq[0]);
-                ss >> ntrees_;
+                ss >> ntrees;
                 dq.pop_front();
             }
             trees_.clear();
-            for(int i = 0; i < ntrees_; ++i){
-                trees_.push_back(mytree(dim_, tf_, objfunc_th_, nexamples_th_, nsamplings_));
+            for(int i = 0; i < ntrees; ++i){
+                trees_.push_back(mytree(dim_, tf_));
                 trees_[i].recursive_deserialize(dq);
             }
             ifs.close();
