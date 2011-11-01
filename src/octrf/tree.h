@@ -38,7 +38,7 @@ namespace octrf {
         }
 
         template <typename ObjFunc>
-        void train(const ES& data, ObjFunc& objfunc, const TreeTrainingParameters& trp){
+        void train(const ES& data, ObjFunc objfunc, const TreeTrainingParameters& trp){
             if(objfunc(data.Y_) < trp.objfunc_th || data.size() <= trp.nexamples_th){
                 leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_)));
                 return;
