@@ -60,12 +60,13 @@ namespace octrf {
             }
             std::string serialize() const {
                 std::stringstream ss;
-                ss << d_;
+                ss << d_ << " " << th_;
                 return ss.str();
             }
             void deserialize(const std::string& s){
                 std::stringstream ss(s);
                 ss >> d_;
+                ss >> th_;
             }
         };
         
