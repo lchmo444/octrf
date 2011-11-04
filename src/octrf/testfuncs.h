@@ -56,7 +56,7 @@ namespace octrf {
             }
             void random_sample() {
                 d_ = rand() % dim_;
-                th_ = lb_ + (lb_ - ub_) * ((rand() % (int)(1/delta_)) * delta_);
+                th_ = lb_ + (ub_ - lb_) * ((rand() % (int)(1/delta_)) * delta_);
             }
             std::string serialize() const {
                 std::stringstream ss;

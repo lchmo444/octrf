@@ -7,10 +7,12 @@ namespace octrf {
         double objfunc_th; // if the entropy is lesser than this value, growing is stopped
         int nexamples_th;  // if #data < this value, growing is stopped
         int nsamplings;    // the number of random samplings
-        TreeTrainingParameters(const double objfunc_th = 0, int nexamples_th = 1, int nsamplings = 300)
+        bool chatty_;
+        TreeTrainingParameters(const double objfunc_th = 0, int nexamples_th = 1, int nsamplings = 300, bool chatty = false)
             : objfunc_th(objfunc_th),
               nexamples_th(nexamples_th),
-              nsamplings(nsamplings)
+              nsamplings(nsamplings),
+              chatty_(chatty)
         {};
     };
 
@@ -39,8 +41,15 @@ namespace octrf {
 
         template <typename ObjFunc>
         void train(const ES& data, ObjFunc objfunc, const TreeTrainingParameters& trp){
-            if(objfunc(data.Y_) < trp.objfunc_th || data.size() <= trp.nexamples_th){
+            if(trp.chatty_){
+                std::cout <<
+                    "#data = " << data.size() << ", " <<
+                    "o(data) = " << objfunc(data.Y_) << std::endl;
+            }
+
+            if(objfunc(data.Y_) <= trp.objfunc_th || data.size() <= trp.nexamples_th){
                 leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_)));
+                if(trp.chatty_) std::cout << "Leaf: " << leaf_.second->serialize() << std::endl;
                 return;
             }
 
@@ -68,6 +77,7 @@ namespace octrf {
             }
             if(rdata.size() == 0 || ldata.size() == 0){
                 leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_)));
+                if(trp.chatty_) std::cout << "Cannot grow, Leaf: " << leaf_.second->serialize() << std::endl;
                 return;
             }
             tf_ = best_tf;
