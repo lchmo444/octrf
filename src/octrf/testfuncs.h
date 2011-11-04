@@ -44,7 +44,7 @@ namespace octrf {
         public:
             Stamp() : dim_(1), th_(0), d_(0){}
             Stamp(const int dim, const T lb = 0, const T ub = 1, const double delta = 1e-4)
-                :  dim_(dim), th_(0), d_(0){};
+                :  dim_(dim), delta_(delta), lb_(lb), ub_(ub), th_(0), d_(0){};
             bool operator() (const std::vector< std::pair<int, T> >& x) const { // for SV
                 for(int i=0; i < x.size(); i++){
                     if(x[i].first == d_) return x[i].second > th_;
@@ -56,7 +56,7 @@ namespace octrf {
             }
             void random_sample() {
                 d_ = rand() % dim_;
-                th_ = lb_ + ub_ * ((rand() % (int)(1/delta_)) * delta_);
+                th_ = lb_ + (lb_ - ub_) * ((rand() % (int)(1/delta_)) * delta_);
             }
             std::string serialize() const {
                 std::stringstream ss;
