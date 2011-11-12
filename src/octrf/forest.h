@@ -32,9 +32,9 @@ namespace octrf {
         {};
 
         ResultType predict(const XType& x) const {
-            std::vector<LeafType> results;
+            std::vector<LeafType> results(trees_.size());
             for(int i=0; i < trees_.size(); i++)
-                results.push_back(trees_[i].predict(x));
+                results[i] = trees_[i].predict(x);
             return LeafType::set2result(results);
         }
 
@@ -44,15 +44,22 @@ namespace octrf {
             for(int i = 0; i < data.size(); ++i) idxs.push_back(i);
             std::random_shuffle(idxs.begin(), idxs.end());
             auto it = idxs.begin();
-            trees_.clear();
+            std::vector< std::vector<int> > subidxs_set;
             for(int i=0; i < trp.ntrees; i++){
                 std::vector<int> subidxs;
                 for(int j=0; j < idxs.size()/trp.ntrees && it != idxs.end(); ++j, ++it){
                     subidxs.push_back(*it);
                 }
+                subidxs_set.push_back(subidxs);
+            }
+
+            trees_.clear();
+            for(int i=0; i < trp.ntrees; i++) trees_.push_back(mytree(dim_, tf_));
+#pragma omp parallel for
+            for(int i=0; i < trp.ntrees; i++){
+                const std::vector<int>& subidxs = subidxs_set[i];
                 ES partofdata;
                 data.subset(subidxs, partofdata);
-                trees_.push_back(mytree(dim_, tf_));
                 trees_[i].train(partofdata, objfunc, trp.tree_trp);
             }
         }

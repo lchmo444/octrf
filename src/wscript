@@ -7,14 +7,17 @@ def build(bld):
     bld(features = 'cxx cxxstlib',
         source = 'octrf/io.cpp octrf/objfuncs.cpp',
         target = 'octrf',
+        lib = ['gomp'],
         includes = '.')
     bld(features = 'cxx cprogram',
         source = 'train.cpp',
         target = 'train',
         use = 'octrf',
+        lib = ['gomp'],
         includes = 'src')
     bld(features = 'cxx cprogram',
         source = 'predict.cpp',
         target = 'predict',
         use = 'octrf',
+        lib = ['gomp'],
         includes = 'src')
