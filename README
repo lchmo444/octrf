@@ -1,0 +1,4 @@
+./waf configure
+./waf
+./build/src/train -d data/a1a -m model.txt -n  5
+./build/src/predict -d data/a1a.t -m model.txt
