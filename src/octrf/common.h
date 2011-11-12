@@ -49,6 +49,15 @@ namespace octrf {
         }
 
         size_t size() const { return Y_.size(); }
+
+        std::pair<YType, XType> operator[] (const int i) const {
+            return make_pair(Y_[i], X_[i]);
+        }
+
+        void clear() {
+            Y_.clear();
+            X_.clear();
+        }
     };
 }
 

@@ -5,15 +5,28 @@
 namespace octrf {
     struct TreeTrainingParameters {
         double objfunc_th; // if the entropy is lesser than this value, growing is stopped
+        double objfunc_restart_th;
         int nexamples_th;  // if #data < this value, growing is stopped
+        int nexamples_restart_th;
         int nsamplings;    // the number of random samplings
         bool chatty_;
-        TreeTrainingParameters(const double objfunc_th = 0, int nexamples_th = 1, int nsamplings = 300, bool chatty = false)
+        TreeTrainingParameters(
+            const double objfunc_th = 0,
+            const double objfunc_restart_th = 0.1,
+            const int nexamples_th = 1,
+            const int nexamples_restart_th = 500,
+            const int nsamplings = 300,
+            const bool chatty = false)
             : objfunc_th(objfunc_th),
+              objfunc_restart_th(objfunc_restart_th),
               nexamples_th(nexamples_th),
+              nexamples_restart_th(nexamples_restart_th),
               nsamplings(nsamplings),
               chatty_(chatty)
-        {};
+        {
+            assert(objfunc_th < objfunc_restart_th);
+            assert(nexamples_th < nexamples_restart_th);
+        };
     };
 
 
@@ -28,15 +41,37 @@ namespace octrf {
         std::pair<bool, std::shared_ptr<LeafType> > leaf_;
         std::shared_ptr<mytree> tr_;
         std::shared_ptr<mytree> tl_;
+        ES stock_;
     public:
         Tree(const int dim, TestFunc tf)
             : dim_(dim), tf_(tf),
-              leaf_(false, std::shared_ptr<LeafType>())
+              leaf_(true, std::shared_ptr<LeafType>())
         {};
 
         LeafType predict(const XType& x) const {
             if(leaf_.first) return *(leaf_.second);
             return tf_(x) ? tr_->predict(x) : tl_->predict(x);
+        }
+
+        template <typename ObjFunc>
+        void train1(const std::pair<YType, XType>& example, ObjFunc objfunc,
+                    const TreeTrainingParameters& trp)
+        {
+            if(!leaf_.first){
+                tf_(example.second) ?
+                    tr_->train1(example, objfunc, trp) :
+                    tl_->train1(example, objfunc, trp);
+                return;
+            }
+
+            stock_.push_back(example);
+            if(stock_.size() >= trp.nexamples_restart_th &&
+               objfunc(stock_.Y_) >= trp.objfunc_restart_th)
+            {
+                leaf_.first = false;
+                train(stock_, objfunc, trp);
+                stock_.clear();
+            }
         }
 
         template <typename ObjFunc>
@@ -81,6 +116,7 @@ namespace octrf {
                 return;
             }
             tf_ = best_tf;
+            leaf_.first = false;
             tr_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
             tl_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
             tr_->train(rdata, objfunc, trp);
@@ -107,6 +143,7 @@ namespace octrf {
                 leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType()));
                 leaf_.second->deserialize(str);
             } else {
+                leaf_.first = false;
                 std::string str;
                 ss >> str;
                 tf_.deserialize(str);

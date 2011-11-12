@@ -38,6 +38,18 @@ namespace octrf {
             return LeafType::set2result(results);
         }
 
+        void prepare(const ForestTrainingParameters& trp){
+            while(trees_.size() < trp.ntrees) trees_.push_back(mytree(dim_, tf_));
+        }
+
+        template <typename ObjFunc>
+        void train1(const std::pair<YType, XType>& example, ObjFunc& objfunc,
+                    const ForestTrainingParameters& trp)
+        {
+            prepare(trp);
+            trees_[rand() % trees_.size()].train1(example, objfunc, trp.tree_trp);
+        }
+
         template <typename ObjFunc>
         void train(const ES& data, ObjFunc& objfunc, const ForestTrainingParameters& trp){
             std::vector<int> idxs;
@@ -54,7 +66,7 @@ namespace octrf {
             }
 
             trees_.clear();
-            for(int i=0; i < trp.ntrees; i++) trees_.push_back(mytree(dim_, tf_));
+            prepare(trp);
 #pragma omp parallel for
             for(int i=0; i < trp.ntrees; i++){
                 const std::vector<int>& subidxs = subidxs_set[i];
