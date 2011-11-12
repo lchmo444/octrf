@@ -17,8 +17,7 @@ int main(int argc, char *argv[])
     SExampleSet data;
     int dim = io::read_libsvmformat(a.get<string>("data"), data);
 
-    typedef Forest<int, dSV, leafs::Avg<int, double>, testfuncs::BinaryStamp<double>, double > myforest;
-    myforest model(dim, testfuncs::BinaryStamp<double>(dim));
+    dBinaryDecisionForest model(dim, testfuncs::BinaryStamp<double>(dim));
     benchmark("train"){
         model.train(data, objfuncs::entropy,
                     ForestTrainingParameters(a.get<int>("ntrees"), TreeTrainingParameters(0, 1, 500)));

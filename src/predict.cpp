@@ -16,13 +16,9 @@ int main(int argc, char *argv[])
     SExampleSet data;
     int dim = io::read_libsvmformat(a.get<string>("data"), data);
 
-    cout << "initialize model" << endl;
-    typedef Forest<int, dSV, leafs::Avg<int, double>, testfuncs::BinaryStamp<double>, double > myforest;
-    myforest model(dim, testfuncs::BinaryStamp<double>(dim));
-    cout << "load model from the file" << endl;
+    dBinaryDecisionForest model(dim, testfuncs::BinaryStamp<double>(dim));
     model.load(a.get<string>("model"));
 
-    cout << "predict" << endl;
     int tp=0, tn=0, fp=0, fn=0;
     benchmark("predict"){
         for(int i=0; i < data.size(); i++){
