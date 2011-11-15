@@ -50,20 +50,26 @@ namespace octrf {
             trees_[rand() % trees_.size()].train1(example, objfunc, trp.tree_trp);
         }
 
-        template <typename ObjFunc>
-        void train(const ES& data, ObjFunc& objfunc, const ForestTrainingParameters& trp){
+        static void make_subidxs_set(std::vector< std::vector<int> >& subidxs_set,
+                                     const int ndata, const int nsubidxs)
+        {
             std::vector<int> idxs;
-            for(int i = 0; i < data.size(); ++i) idxs.push_back(i);
+            for(int i = 0; i < ndata; ++i) idxs.push_back(i);
             std::random_shuffle(idxs.begin(), idxs.end());
             auto it = idxs.begin();
-            std::vector< std::vector<int> > subidxs_set;
-            for(int i=0; i < trp.ntrees; i++){
+            for(int i=0; i < nsubidxs; i++){
                 std::vector<int> subidxs;
-                for(int j=0; j < idxs.size()/trp.ntrees && it != idxs.end(); ++j, ++it){
+                for(int j=0; j < idxs.size()/nsubidxs && it != idxs.end(); ++j, ++it){
                     subidxs.push_back(*it);
                 }
                 subidxs_set.push_back(subidxs);
             }
+        }
+
+        template <typename ObjFunc>
+        void train(const ES& data, ObjFunc& objfunc, const ForestTrainingParameters& trp){
+            std::vector< std::vector<int> > subidxs_set;
+            make_subidxs_set(subidxs_set);
 
             trees_.clear();
             prepare(trp);
@@ -81,18 +87,9 @@ namespace octrf {
                    const ForestTrainingParameters& trp, FeatureExtrator& fe)
         {
             assert(labels.size() == metax.size());
-            std::vector<int> idxs;
-            for(int i = 0; i < labels.size(); ++i) idxs.push_back(i);
-            std::random_shuffle(idxs.begin(), idxs.end());
-            auto it = idxs.begin();
+
             std::vector< std::vector<int> > subidxs_set;
-            for(int i=0; i < trp.ntrees; i++){
-                std::vector<int> subidxs;
-                for(int j=0; j < idxs.size()/trp.ntrees && it != idxs.end(); ++j, ++it){
-                    subidxs.push_back(*it);
-                }
-                subidxs_set.push_back(subidxs);
-            }
+            make_subidxs_set(subidxs_set);
 
             trees_.clear();
             prepare(trp);
@@ -102,6 +99,26 @@ namespace octrf {
                 ES partofdata;
                 for(auto it = subidxs.begin(); it != subidxs.end(); ++it){
                     partofdata.push_back(labels[*it], fe(metax[*it]));
+                }
+                trees_[i].train(partofdata, objfunc, trp.tree_trp);
+            }
+        }
+ 
+        template <typename ObjFunc, typename MetaType, typename Extrator>
+        void train(const std::vector<MetaType>& meta, ObjFunc& objfunc,
+                   const ForestTrainingParameters& trp, Extrator& extractor)
+        {
+            std::vector< std::vector<int> > subidxs_set;
+            make_subidxs_set(subidxs_set);
+
+            trees_.clear();
+            prepare(trp);
+#pragma omp parallel for
+            for(int i=0; i < trp.ntrees; i++){
+                const std::vector<int>& subidxs = subidxs_set[i];
+                ES partofdata;
+                for(auto it = subidxs.begin(); it != subidxs.end(); ++it){
+                    partofdata.push_back(extractor(*it));
                 }
                 trees_[i].train(partofdata, objfunc, trp.tree_trp);
             }
