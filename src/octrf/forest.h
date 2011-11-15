@@ -75,6 +75,37 @@ namespace octrf {
                 trees_[i].train(partofdata, objfunc, trp.tree_trp);
             }
         }
+
+        template <typename ObjFunc, typename MetaXType, typename FeatureExtrator>
+        void train(const std::vector<YType>& labels, const std::vector<MetaXType>& metax, ObjFunc& objfunc,
+                   const ForestTrainingParameters& trp, FeatureExtrator& fe)
+        {
+            assert(labels.size() == metax.size());
+            std::vector<int> idxs;
+            for(int i = 0; i < labels.size(); ++i) idxs.push_back(i);
+            std::random_shuffle(idxs.begin(), idxs.end());
+            auto it = idxs.begin();
+            std::vector< std::vector<int> > subidxs_set;
+            for(int i=0; i < trp.ntrees; i++){
+                std::vector<int> subidxs;
+                for(int j=0; j < idxs.size()/trp.ntrees && it != idxs.end(); ++j, ++it){
+                    subidxs.push_back(*it);
+                }
+                subidxs_set.push_back(subidxs);
+            }
+
+            trees_.clear();
+            prepare(trp);
+#pragma omp parallel for
+            for(int i=0; i < trp.ntrees; i++){
+                const std::vector<int>& subidxs = subidxs_set[i];
+                ES partofdata;
+                for(auto it = subidxs.begin(); it != subidxs.end(); ++it){
+                    partofdata.push_back(labels[*it], fe(metax[*it]));
+                }
+                trees_[i].train(partofdata, objfunc, trp.tree_trp);
+            }
+        }
  
         void save(const std::string& filename) const {
             std::ofstream ofs(filename.c_str());
