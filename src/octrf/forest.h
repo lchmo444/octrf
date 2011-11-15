@@ -69,7 +69,7 @@ namespace octrf {
         template <typename ObjFunc>
         void train(const ES& data, ObjFunc& objfunc, const ForestTrainingParameters& trp){
             std::vector< std::vector<int> > subidxs_set;
-            make_subidxs_set(subidxs_set);
+            make_subidxs_set(subidxs_set, data.size(), trp.ntrees);
 
             trees_.clear();
             prepare(trp);
@@ -89,7 +89,7 @@ namespace octrf {
             assert(labels.size() == metax.size());
 
             std::vector< std::vector<int> > subidxs_set;
-            make_subidxs_set(subidxs_set);
+            make_subidxs_set(subidxs_set, labels.size(), trp.ntrees);
 
             trees_.clear();
             prepare(trp);
@@ -109,7 +109,7 @@ namespace octrf {
                    const ForestTrainingParameters& trp, Extrator& extractor)
         {
             std::vector< std::vector<int> > subidxs_set;
-            make_subidxs_set(subidxs_set);
+            make_subidxs_set(subidxs_set, meta.size(), trp.ntrees);
 
             trees_.clear();
             prepare(trp);
