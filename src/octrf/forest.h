@@ -113,13 +113,14 @@ namespace octrf {
 
             trees_.clear();
             prepare(trp);
-#pragma omp parallel for
             for(int i=0; i < trp.ntrees; i++){
                 const std::vector<int>& subidxs = subidxs_set[i];
                 ES partofdata;
+                std::cout << "extract..." << std::endl;
                 for(auto it = subidxs.begin(); it != subidxs.end(); ++it){
-                    partofdata.push_back(extractor(*it));
+                    partofdata.push_back(extractor(meta[*it]));
                 }
+                std::cout << "done." << std::endl;
                 trees_[i].train(partofdata, objfunc, trp.tree_trp);
             }
         }
