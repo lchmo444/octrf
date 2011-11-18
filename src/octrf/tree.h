@@ -138,14 +138,14 @@ namespace octrf {
             int is_leaf = 0;
             ss >> is_leaf;
             if(is_leaf == 1){
-                std::string str;
-                ss >> str;
+                std::string str, buf;
+                while(ss >> buf){str += buf + " ";}
                 leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType()));
                 leaf_.second->deserialize(str);
             } else {
                 leaf_.first = false;
-                std::string str;
-                ss >> str;
+                std::string str, buf;
+                while(ss >> buf){str += buf + " ";}
                 tf_.deserialize(str);
             }
         }
