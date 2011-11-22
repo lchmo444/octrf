@@ -71,23 +71,23 @@ namespace octrf {
                objfunc(stock_.Y_, idxs) >= trp.objfunc_restart_th)
             {
                 leaf_.first = false;
-                train(stock_, objfunc, trp);
+                train(stock_, idxs, objfunc, trp);
                 stock_.clear();
             }
         }
 
         template <typename ObjFunc>
-        void train(const ES& data, ObjFunc objfunc, const TreeTrainingParameters& trp){
-            std::vector<int> idxs(data.size());
-            for(int i = 0; i < idxs.size(); ++i) idxs[i] = i;
+        void train(const ES& data, const std::vector<int>& idxs,
+                   ObjFunc objfunc, const TreeTrainingParameters& trp)
+        {
             if(trp.chatty_){
                 std::cout <<
-                    "#data = " << data.size() << ", " <<
+                    "#data = " << idxs.size() << ", " <<
                     "o(data) = " << objfunc(data.Y_, idxs) << std::endl;
             }
 
-            if(objfunc(data.Y_, idxs) <= trp.objfunc_th || data.size() <= trp.nexamples_th){
-                leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_)));
+            if(objfunc(data.Y_, idxs) <= trp.objfunc_th || idxs.size() <= trp.nexamples_th){
+                leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_, idxs)));
                 if(trp.chatty_) std::cout << "Leaf: " << leaf_.second->serialize() << std::endl;
                 return;
             }
@@ -98,9 +98,9 @@ namespace octrf {
                 TestFunc tf(tf_);
                 tf.random_sample();
                 std::vector<int> ridxs, lidxs;
-                for(int i=0; i < data.size(); i++){
-                    if(tf(data.X_[i])) ridxs.push_back(i);
-                    else lidxs.push_back(i);
+                for(auto it = idxs.begin(); it != idxs.end(); ++it){
+                    if(tf(data.X_[*it])) ridxs.push_back(*it);
+                    else lidxs.push_back(*it);
                 }
                 double e = (double)ridxs.size() * objfunc(data.Y_, ridxs) + (double)lidxs.size() * objfunc(data.Y_, lidxs);
                 if(e < mine){
@@ -109,13 +109,13 @@ namespace octrf {
                 }
             }
 
-            ES rdata, ldata;
-            for(int i=0; i < data.size(); i++){
-                if(best_tf(data.X_[i])) data.push_to(rdata, i);
-                else data.push_to(ldata, i);
+            std::vector<int> ridxs, lidxs;
+            for(auto it = idxs.begin(); it != idxs.end(); ++it){
+                if(best_tf(data.X_[*it])) ridxs.push_back(*it);
+                else lidxs.push_back(*it);
             }
-            if(rdata.size() == 0 || ldata.size() == 0){
-                leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_)));
+            if(ridxs.size() == 0 || lidxs.size() == 0){
+                leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_, idxs)));
                 if(trp.chatty_) std::cout << "Cannot grow, Leaf: " << leaf_.second->serialize() << std::endl;
                 return;
             }
@@ -123,8 +123,8 @@ namespace octrf {
             leaf_.first = false;
             tr_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
             tl_ = std::shared_ptr<mytree>(new mytree(dim_, tf_));
-            tr_->train(rdata, objfunc, trp);
-            tl_->train(ldata, objfunc, trp);
+            tr_->train(data, ridxs, objfunc, trp);
+            tl_->train(data, lidxs, objfunc, trp);
         }
 
         std::string serialize() const {

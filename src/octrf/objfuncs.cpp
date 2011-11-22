@@ -15,7 +15,7 @@ namespace octrf {
             for(unordered_map<int, int>::iterator it = nums.begin();
                 it != nums.end(); ++it)
             {
-                double p = it->second / (double)Y.size();
+                double p = it->second / (double)idxs.size();
                 e -= p * log(p);
             }
             return e;

@@ -9,11 +9,11 @@ namespace octrf {
         public:
             T v_;
             Avg() : v_(0){}
-            Avg(const std::vector<YType>& Y) : v_(0){
-                for(int i = 0; i < Y.size(); ++i){
-                    v_ += (T)Y[i];
+            Avg(const std::vector<YType>& Y, const std::vector<int>& idxs) : v_(0){
+                for(auto it = idxs.begin(); it != idxs.end(); ++it){
+                    v_ += (T)Y[*it];
                 }
-                v_ /= (T)Y.size();
+                v_ /= (T)idxs.size();
             }
 
             static T set2result(const std::vector<Avg<YType, T> >& vs){
