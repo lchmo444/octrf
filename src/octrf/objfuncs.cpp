@@ -4,11 +4,11 @@ using namespace std;
 
 namespace octrf {
     namespace objfuncs {
-        double entropy(const std::vector<int>& Y){
+        double entropy(const std::vector<int>& Y, const std::vector<int>& idxs){
             double e = 0;
             unordered_map<int, int> nums;
-            for(int i=0; i < Y.size(); i++){
-                const int& y = Y[i];
+            for(int i=0; i < idxs.size(); i++){
+                const int& y = Y[idxs[i]];
                 if(!nums.count(y)) nums.insert(make_pair(y, 0));
                 nums[y]++;
             }

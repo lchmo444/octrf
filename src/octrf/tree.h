@@ -65,8 +65,10 @@ namespace octrf {
             }
 
             stock_.push_back(example);
+            std::vector<int> idxs(stock_.size());
+            for(int i = 0; i < idxs.size(); ++i) idxs[i] = i;
             if(stock_.size() >= trp.nexamples_restart_th &&
-               objfunc(stock_.Y_) >= trp.objfunc_restart_th)
+               objfunc(stock_.Y_, idxs) >= trp.objfunc_restart_th)
             {
                 leaf_.first = false;
                 train(stock_, objfunc, trp);
@@ -76,13 +78,15 @@ namespace octrf {
 
         template <typename ObjFunc>
         void train(const ES& data, ObjFunc objfunc, const TreeTrainingParameters& trp){
+            std::vector<int> idxs(data.size());
+            for(int i = 0; i < idxs.size(); ++i) idxs[i] = i;
             if(trp.chatty_){
                 std::cout <<
                     "#data = " << data.size() << ", " <<
-                    "o(data) = " << objfunc(data.Y_) << std::endl;
+                    "o(data) = " << objfunc(data.Y_, idxs) << std::endl;
             }
 
-            if(objfunc(data.Y_) <= trp.objfunc_th || data.size() <= trp.nexamples_th){
+            if(objfunc(data.Y_, idxs) <= trp.objfunc_th || data.size() <= trp.nexamples_th){
                 leaf_ = std::make_pair(true, std::shared_ptr<LeafType>(new LeafType(data.Y_)));
                 if(trp.chatty_) std::cout << "Leaf: " << leaf_.second->serialize() << std::endl;
                 return;
@@ -93,12 +97,12 @@ namespace octrf {
             for(int c=0; c < trp.nsamplings; c++){
                 TestFunc tf(tf_);
                 tf.random_sample();
-                ES rdata, ldata;
+                std::vector<int> ridxs, lidxs;
                 for(int i=0; i < data.size(); i++){
-                    if(tf(data.X_[i])) data.push_to(rdata, i);
-                    else data.push_to(ldata, i);
+                    if(tf(data.X_[i])) ridxs.push_back(i);
+                    else lidxs.push_back(i);
                 }
-                double e = (double)rdata.size() * objfunc(rdata.Y_) + (double)ldata.size() * objfunc(ldata.Y_);
+                double e = (double)ridxs.size() * objfunc(data.Y_, ridxs) + (double)lidxs.size() * objfunc(data.Y_, lidxs);
                 if(e < mine){
                     mine = e;
                     best_tf = tf;
