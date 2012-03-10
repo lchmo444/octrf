@@ -79,28 +79,6 @@ namespace octrf {
                 trees_[i].train(data, subidxs, objfunc, trp.tree_trp);
             }
         }
-/* 
-        template <typename ObjFunc, typename MetaType, typename Extrator>
-        void train(const std::vector<MetaType>& meta, ObjFunc& objfunc,
-                   const ForestTrainingParameters& trp, Extrator& extractor)
-        {
-            std::vector< std::vector<int> > subidxs_set;
-            make_subidxs_set(subidxs_set, meta.size(), trp.ntrees);
-
-            trees_.clear();
-            prepare(trp);
-            for(int i=0; i < trp.ntrees; i++){
-                const std::vector<int>& subidxs = subidxs_set[i];
-                ES partofdata;
-                std::cout << "extract..." << std::endl;
-                for(auto it = subidxs.begin(); it != subidxs.end(); ++it){
-                    partofdata.push_back(extractor(meta[*it]));
-                }
-                std::cout << "done." << std::endl;
-                trees_[i].train(partofdata, objfunc, trp.tree_trp);
-            }
-        }
-*/
  
         void save(const std::string& filename) const {
             std::ofstream ofs(filename.c_str());

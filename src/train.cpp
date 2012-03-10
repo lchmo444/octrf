@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
         benchmark("train"){
             model.train(data, objfuncs::entropy, ftrp);
         }
-        model.save(a.get<string>("model"));
     }
     else {
         benchmark("online train"){
@@ -37,8 +36,8 @@ int main(int argc, char *argv[])
                 model.train1(data[idxs[i]], objfuncs::entropy, ftrp);
             }
         }
-        model.save(a.get<string>("model"));
     }
+    model.save(a.get<string>("model"));
     
     
     return 0;
